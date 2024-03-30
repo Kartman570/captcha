@@ -8,5 +8,8 @@ set of captchas that hard to broke by bots/ai
 
 >pip3 install -r requirements.txt
 
+### run
+>make init
+
 ### create requirements
 >pip3 freeze > requirements.txt
