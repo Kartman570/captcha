@@ -2,14 +2,23 @@ set of captchas that hard to broke by bots/ai
 
 
 ### install
->python3 -m venv venv
+```bash
+python3 -m venv venv
+```
 
->source venv/bin/activate
-
->pip3 install -r requirements.txt
-
+```bash
+source venv/bin/activate
+```
+```bash
+pip3 install -r requirements.txt
+````
 ### run
->make init
+
+```bash
+make init
+```
 
 ### create requirements
->pip3 freeze > requirements.txt
+```bash
+pip3 freeze > requirements.txt
+```

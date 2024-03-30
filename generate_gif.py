@@ -1,6 +1,4 @@
 import random
-import string
-
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -12,19 +10,20 @@ def dot(img, x, y):
     return img
 
 
-def circle(img, x, y, radius):
+def circle(img, x, y, size=50):  # size = radius. name unification with other methods
     draw = ImageDraw.Draw(img)
-    for i in range(x - radius, x + radius + 1):
-        for j in range(y - radius, y + radius + 1):
-            if (i - x) ** 2 + (j - y) ** 2 <= radius ** 2:
-                if 0 <= i < img.width and 0 <= j < img.height:
-                    current_pixel = img.getpixel((i, j))
-                    new_pixel = 1 if current_pixel == 0 else 0
-                    draw.point((i, j), fill=new_pixel)
+    points_in_circle = ((i, j) for i in range(x - size, x + size + 1)
+                        for j in range(y - size, y + size + 1)
+                        if (i - x) ** 2 + (j - y) ** 2 <= size ** 2
+                        and 0 <= i < img.width and 0 <= j < img.height)
+    for i, j in points_in_circle:
+        current_pixel = img.getpixel((i, j))
+        new_pixel = 1 - current_pixel
+        draw.point((i, j), fill=new_pixel)
     return img
 
 
-def square(img, x, y, size):
+def square(img, x, y, size=50):
     draw = ImageDraw.Draw(img)
     for i in range(x - size, x + size):
         for j in range(y - size, y + size):
@@ -36,7 +35,9 @@ def square(img, x, y, size):
     return img
 
 
-def letter(img, x, y, text, size=200):
+def letter(img, x, y, size=200, text="A"):
+    x -= size // 2  # font coordinate system are in corner
+    y -= size // 2
     temp_img = Image.new('1', img.size, 0)
     draw_temp = ImageDraw.Draw(temp_img)
     try:
@@ -50,46 +51,65 @@ def letter(img, x, y, text, size=200):
         for j in range(img.size[1]):
             if mask[i, j] == 1:
                 current_pixel = img.getpixel((i, j))
-                new_pixel = 1 if current_pixel == 0 else 0
+                new_pixel = 1 - current_pixel
                 pixels[i, j] = new_pixel
 
     return img
 
 
-def make_gif():
-    frames = []
+def move_variables(img):
+    x = random.randint(img.width // 4, (img.width // 4) * 3)
+    y = random.randint(img.height // 4, (img.height // 4) * 3)
+    step_x = random.randint(1, 4)
+    if x > img.width // 2:
+        step_x *= -1
+    step_y = random.randint(1, 4)
+    if y > img.height // 2:
+        step_y *= -1
+    return x, y, step_x, step_y
+
+
+def make_gif(random_seed=None, animation_type='move', draw_method=circle, draw_args=(50,)):
+    random.seed(random_seed)
     img = init_noise()
-    frames.append(img.copy())
-    x, y = 0, 0
-    step = 4
-    frame_count = 100
-    selected_letter = random.choice(string.ascii_uppercase)
-    for number in range(frame_count):
-        if number == frame_count // 2:
-            step *= -1
-        if x >= img.width or y >= img.height:
-            break
-        # TODO BLINKING
-        # new_frame = dot(img.copy(), x, y)
-        # new_frame = circle(img.copy(), x, y, 60)
-        # new_frame = square(img.copy(), x, y, 50)
-        new_frame = letter(img.copy(), x, y, selected_letter)
+
+    x, y, step_x, step_y = move_variables(img)
+    frames = []
+    if animation_type == 'move':
+        frame_count = 100
+        frame_duration = 20
+        for frame in range(frame_count):
+            if frame == frame_count // 2:
+                step_x *= -1
+                step_y *= -1
+            new_frame = draw_method(img.copy(), x, y, *draw_args)
+            frames.append(new_frame)
+            x += step_x
+            y += step_y
+    if animation_type == 'blink':
+        frame_duration = 100
+        frames.append(img)
+        new_frame = draw_method(img.copy(), x, y, *draw_args)
         frames.append(new_frame)
-        x += step
-        y += step
 
     frame_one = frames[0]
-    frame_one.save("test.gif", format="GIF", append_images=frames[1:], save_all=True, duration=20, loop=0)
+    frame_one.save("test.gif", format="GIF", append_images=frames[1:], save_all=True, duration=frame_duration, loop=0)
 
 
-def init_noise(seed_num: int = 1):
-    random.seed(seed_num)
+def init_noise():
     image = Image.new("1", (400, 400))
     pixels = [random.randint(0, 1) for _ in range(400 * 400)]
     image.putdata(pixels)
-    # image = Image.new("1", (400, 400), color=0)
     return image
 
 
 if __name__ == "__main__":
-    make_gif()
+    # pass
+    make_gif(None,'move', circle, (100,))
+    # make_gif(None, 'blink', circle, (50,))
+
+    # make_gif(None,'move', square, (50,))
+    # make_gif(None,'blink', square, (100,))
+
+    # make_gif(None,'move', letter, (350, "A"))
+    # make_gif(None,'blink', letter, (150, "A"))
