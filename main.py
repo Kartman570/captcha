@@ -1,4 +1,5 @@
 import random
+import string
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -62,15 +63,17 @@ def make_gif():
     x, y = 0, 0
     step = 4
     frame_count = 100
+    selected_letter = random.choice(string.ascii_uppercase)
     for number in range(frame_count):
         if number == frame_count // 2:
             step *= -1
         if x >= img.width or y >= img.height:
             break
+        # TODO BLINKING
         # new_frame = dot(img.copy(), x, y)
         # new_frame = circle(img.copy(), x, y, 60)
-        new_frame = square(img.copy(), x, y, 20)
-        # new_frame = letter(img.copy(), x, y, "A")
+        # new_frame = square(img.copy(), x, y, 50)
+        new_frame = letter(img.copy(), x, y, selected_letter)
         frames.append(new_frame)
         x += step
         y += step
